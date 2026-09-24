@@ -1,0 +1,30 @@
+services:
+  # ⚠️ IMPORTANT: Render's free Web Services do NOT have a persistent disk —
+  # the SQLite file (taxi.db) will be WIPED every time the service redeploys or restarts
+  # (including after it spins down from inactivity and spins back up on some occasions).
+  # Fine for testing; for real data, attach a paid Render Disk (mount it at /data and set
+  # DB_PATH=/data/taxi.db below), or use Railway/a VPS instead.
+
+  # ONE service running BOTH the Telegram bot (polling, background thread) and the
+  # admin web panel (Flask) — see app.py. Running them together guarantees they read
+  # and write the exact same taxi.db file, so the admin panel always reflects the bot's data.
+  - type: web
+    name: zhanakala-taxi-bot
+    env: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python3 app.py
+    envVars:
+      - key: BOT_TOKEN
+        sync: false          # paste your token from @BotFather in the Render dashboard
+      - key: ADMIN_CHAT_ID
+        sync: false          # your personal Telegram numeric id (message @userinfobot to get it)
+      - key: ADMIN_PASSWORD
+        sync: false          # password used to log into the admin web panel
+      - key: SECRET_KEY
+        generateValue: true
+      - key: PORT
+        value: "10000"
+      # Optional: point both halves at an absolute path on a mounted persistent disk, e.g.:
+      # - key: DB_PATH
+      #   value: "/data/taxi.db"
