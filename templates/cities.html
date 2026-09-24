@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>🏙 Қалалар / аудандар</h1>
+
+<form method="POST" class="card" style="max-width:420px; margin-bottom:24px;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label class="field-label">Жаңа қала/аудан қосу</label>
+  <input type="text" name="name" placeholder="мыс. Ақсай" style="margin-bottom:14px;">
+  <button type="submit" class="btn btn-primary" style="padding:10px 20px; font-size:14px;">Қосу</button>
+</form>
+
+<table style="margin-bottom:32px;">
+  <tr><th>Атауы</th><th>Күйі</th><th>Әрекет</th></tr>
+  {% for c in cities %}
+  <tr>
+    <td>{{ c.name }}</td>
+    <td><span class="badge badge-{{ 'approved' if c.is_active else 'rejected' }}">{{ 'Белсенді' if c.is_active else 'Өшірулі' }}</span></td>
+    <td>
+      <form class="inline" method="POST" action="{{ url_for('toggle_city', city_id=c.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-ghost" type="submit">{{ 'Өшіру' if c.is_active else 'Қосу' }}</button>
+      </form>
+      <form class="inline" method="POST" action="{{ url_for('delete_city', city_id=c.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-cancel" type="submit">Жою</button>
+      </form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="3" class="hint">Әлі қала/аудан қосылмаған.</td></tr>
+  {% endfor %}
+</table>
+
+<h1>⚙️ Бағыт тарифтері</h1>
+<form method="POST" action="{{ url_for('update_tariffs') }}" class="card" style="max-width:520px;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label class="field-label">🏙 Жанақала ішінде — базалық баға (тг)</label>
+  <input type="text" name="local_base" value="{{ tariffs.local.base_price if tariffs.local else '' }}" style="margin-bottom:14px;">
+  <label class="field-label">🏙 Жанақала ішінде — 1 км бағасы (тг)</label>
+  <input type="text" name="local_per_km" value="{{ tariffs.local.price_per_km if tariffs.local else '' }}" style="margin-bottom:20px;">
+
+  <label class="field-label">🛣 Жанақала — Орал — базалық баға (тг)</label>
+  <input type="text" name="intercity_base" value="{{ tariffs.intercity.base_price if tariffs.intercity else '' }}" style="margin-bottom:14px;">
+  <label class="field-label">🛣 Жанақала — Орал — 1 км бағасы (тг)</label>
+  <input type="text" name="intercity_per_km" value="{{ tariffs.intercity.price_per_km if tariffs.intercity else '' }}" style="margin-bottom:14px;">
+
+  <p class="hint">Бұл тарифтер анықтамалық — жолаушы бағаны әлі өзі жазады, бот оны автоматты есептемейді. Байланыстыру керек болса, айтыңыз.</p>
+  <button type="submit" class="btn btn-primary" style="padding:10px 20px; font-size:14px;">Сақтау</button>
+</form>
+{% endblock %}

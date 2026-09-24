@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>⚙️ Баптаулар</h1>
+
+<div class="stats">
+  <div class="stat-card"><div class="num">{{ total_commission }} тг</div><div class="label">💼 Жиналған комиссия (барлық уақыт)</div></div>
+</div>
+
+<form method="POST" class="card" style="max-width:420px;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label class="field-label">Комиссия пайызы (%)</label>
+  <p class="hint">Аяқталған әр сапарда жүргізушінің балансынан автоматты ұсталатын пайыз.</p>
+  <input type="number" step="0.1" min="0" max="100" name="commission_percent" value="{{ commission_percent }}" style="margin-bottom:16px;">
+
+  <label class="field-label">Тапсырыс қабылдауға минималды баланс (₸)</label>
+  <p class="hint">Жүргізушінің балансы осы соманан төмен болса, Online бола алмайды және тапсырыс қабылдай алмайды — алдымен балансты толтыруы керек.</p>
+  <input type="number" step="1" min="0" name="min_balance" value="{{ min_balance|int }}" style="margin-bottom:16px;">
+
+  <button type="submit" class="btn btn-primary" style="padding:10px 20px; font-size:14px;">Сақтау</button>
+</form>
+{% endblock %}

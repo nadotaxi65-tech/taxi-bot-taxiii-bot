@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>🚕 Жүргізушілер</h1>
+<div class="filters">
+  <a href="{{ url_for('drivers') }}" class="{{ 'active' if not status_filter }}">Барлығы</a>
+  <a href="{{ url_for('drivers', status='pending') }}" class="{{ 'active' if status_filter=='pending' }}">🟡 Верификация күтуде</a>
+  <a href="{{ url_for('drivers', status='approved') }}" class="{{ 'active' if status_filter=='approved' }}">✅ Расталған</a>
+  <a href="{{ url_for('drivers', status='rejected') }}" class="{{ 'active' if status_filter=='rejected' }}">❌ Қабылданбаған</a>
+</div>
+<table>
+  <tr>
+    <th>ID</th><th>Аты / Телефон</th><th>Көлік</th><th>Фото</th><th>Верификация</th>
+    <th>Online</th><th>Рейтинг</th><th>Табыс</th><th>Әрекет</th>
+  </tr>
+  {% for d in drivers %}
+  <tr{% if d.is_blocked %} style="opacity:0.5"{% endif %}>
+    <td>{{ d.id }}</td>
+    <td>{{ d.full_name or '-' }}{% if d.is_blocked %} 🚫{% endif %}<br><span class="hint" style="margin:0;">{{ d.phone or '-' }}</span></td>
+    <td>
+      {{ d.car_brand or '' }} {{ d.car_model or '' }}<br>
+      <span class="hint" style="margin:0;">{{ d.car_color or '' }} {{ d.car_year or '' }} | 🔢 {{ d.car_plate or '-' }}</span>
+    </td>
+    <td>{% if d.car_photo %}<span class="hint" style="margin:0;">Telegram file_id: {{ d.car_photo[:14] }}…</span>{% else %}—{% endif %}</td>
+    <td>
+      {% set vs = d.verification_status or 'none' %}
+      <span class="badge badge-{{ vs }}">
+        {{ '🟡 Күтуде' if vs=='pending' else ('✅ Расталған' if vs=='approved' else ('❌ Қабылданбады' if vs=='rejected' else 'Тіркелмеген')) }}
+      </span>
+      {% if vs == 'rejected' and d.reject_reason %}<div class="hint" style="margin:4px 0 0;">{{ d.reject_reason }}</div>{% endif %}
+    </td>
+    <td>{{ '🟢' if d.is_online else '🔴' }}</td>
+    <td>{{ d.rating_display }}</td>
+    <td>{{ d.earnings_display }}</td>
+    <td>
+      {% if (d.verification_status or 'none') == 'pending' %}
+      <form class="inline" method="POST" action="{{ url_for('approve_driver', user_id=d.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-complete" type="submit">✅ Растау</button>
+      </form>
+      <form class="inline" method="POST" action="{{ url_for('reject_driver', user_id=d.id) }}" onsubmit="var r=prompt('Қабылдамау себебі:'); if(r===null) return false; this.reason.value=r;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <input type="hidden" name="reason">
+        <button class="btn btn-cancel" type="submit">❌ Қабылдамау</button>
+      </form>
+      {% endif %}
+      {% if (d.verification_status or 'none') == 'approved' %}
+      <form class="inline" method="POST" action="{{ url_for('toggle_driver_online', user_id=d.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-ghost" type="submit">{{ 'Offline ету' if d.is_online else 'Online ету' }}</button>
+      </form>
+      {% endif %}
+      {% if d.is_blocked %}
+      <form class="inline" method="POST" action="{{ url_for('unblock_user', user_id=d.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-complete" type="submit">Ашу</button>
+      </form>
+      {% else %}
+      <form class="inline" method="POST" action="{{ url_for('block_user', user_id=d.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-cancel" type="submit">🚫 Бұғаттау</button>
+      </form>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>📊 Жалпы көрсеткіштер</h1>
+
+{% if stats.pending_drivers %}
+<div class="flash" style="background:#fffbeb;color:#b45309;">
+  🟡 <a href="{{ url_for('drivers', status='pending') }}" style="color:#b45309;font-weight:600;">{{ stats.pending_drivers }} жүргізуші верификация күтуде</a> — тексеру керек.
+</div>
+{% endif %}
+
+<div class="card">
+  <div style="font-size:13.5px;font-weight:700;color:var(--muted);margin-bottom:14px;">📈 Соңғы 7 күндегі айналым</div>
+  <canvas id="revenueChart" height="80"></canvas>
+</div>
+
+<div class="stats">
+  <div class="stat-card"><div class="num">{{ daily.turnover }} тг</div><div class="label">💰 Күндік айналым ({{ daily.rides }} сапар)</div></div>
+  <div class="stat-card"><div class="num">{{ monthly.turnover }} тг</div><div class="label">💰 Айлық айналым ({{ monthly.rides }} сапар)</div></div>
+  <div class="stat-card"><div class="num">{{ daily.commission }} тг</div><div class="label">💼 Бүгінгі комиссия</div></div>
+  <div class="stat-card"><div class="num">{{ monthly.commission }} тг</div><div class="label">💼 Айлық комиссия</div></div>
+</div>
+
+<div class="stats">
+  <div class="stat-card"><div class="num">{{ stats.total_users }}</div><div class="label">Барлық пайдаланушы</div></div>
+  <div class="stat-card"><div class="num">{{ stats.total_clients }}</div><div class="label">Жолаушылар</div></div>
+  <div class="stat-card"><div class="num">{{ stats.total_drivers }}</div><div class="label">Жүргізушілер</div></div>
+  <div class="stat-card"><div class="num">{{ stats.online_drivers }}</div><div class="label">🟢 Онлайн жүргізуші</div></div>
+  <div class="stat-card"><div class="num">{{ stats.open_rides }}</div><div class="label">Ашық тапсырыс</div></div>
+  <div class="stat-card"><div class="num">{{ stats.completed_rides }}</div><div class="label">Аяқталған</div></div>
+  <div class="stat-card"><div class="num">{{ stats.total_deliveries }}</div><div class="label">📦 Жеткізу тапсырысы</div></div>
+  <div class="stat-card"><div class="num">{{ stats.total_intercity }}</div><div class="label">🛣 Жанақала — Орал</div></div>
+  <div class="stat-card"><div class="num">{{ stats.avg_rating or '—' }}</div><div class="label">⭐ Орташа рейтинг ({{ stats.rating_count }})</div></div>
+  <div class="stat-card"><div class="num">{{ stats.total_commission }} тг</div><div class="label">💼 Жиналған комиссия ({{ stats.commission_percent }}%, барлық уақыт)</div></div>
+  <div class="stat-card"><div class="num">{{ stats.total_rides }}</div><div class="label">Барлық тапсырыс</div></div>
+</div>
+
+<h1>Соңғы тапсырыстар</h1>
+<table>
+  <tr><th>№</th><th>Түрі</th><th>Клиент</th><th>Қайдан</th><th>Қайда</th><th>Уақыт</th><th>Баға</th><th>Жүргізуші</th><th>Статус</th></tr>
+  {% for r in rides %}
+  <tr>
+    <td>{{ r.id }}</td>
+    <td>
+      <span class="badge badge-{{ r.service_type or 'taxi' }}">{{ '📦 Жеткізу' if r.service_type == 'delivery' else '🚕 Такси' }}</span>
+      {% if r.route == 'intercity' %}<span class="badge badge-intercity">🛣 Орал</span>{% endif %}
+    </td>
+    <td>{{ r.client_name or '-' }}</td>
+    <td>{{ r.from_location }}</td>
+    <td>{{ r.to_location }}</td>
+    <td>{{ r.ride_time }}</td>
+    <td>{{ r.price }} тг</td>
+    <td>{{ r.driver_name or '-' }}</td>
+    <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
+  </tr>
+  {% endfor %}
+</table>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script>
+const ctx = document.getElementById('revenueChart');
+const labels = {{ revenue_by_day | map(attribute='day') | list | tojson }};
+const values = {{ revenue_by_day | map(attribute='total') | list | tojson }};
+new Chart(ctx, {
+  type: 'bar',
+  data: {
+    labels: labels.map(d => d.slice(5)),
+    datasets: [{
+      label: 'Айналым (тг)',
+      data: values,
+      backgroundColor: '#4f46e5',
+      borderRadius: 6,
+      maxBarThickness: 36
+    }]
+  },
+  options: {
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, grid: { color: '#eceef3' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+</script>
+{% endblock %}

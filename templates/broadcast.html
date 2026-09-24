@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>📢 Жаппай хабарлама жіберу</h1>
+
+{% if not bot_token_set %}
+<div class="flash">
+  ⚠️ BOT_TOKEN орнатылмаған. Хабарлама жіберу үшін <code>admin_app.py</code>-ды іске қосар алдында
+  <code>export BOT_TOKEN="..."</code> орнат (bot.py-мен бірдей токен).
+</div>
+{% endif %}
+
+{% if result %}
+<div style="background:#ecfdf5;color:#047857;padding:12px 16px;border-radius:10px;font-size:13.5px;margin-bottom:16px;">
+  ✅ Жіберілді: {{ result.sent }} / {{ result.total }}
+  {% if result.failed %}<br>❌ Жіберілмеді: {{ result.failed }}{% endif %}
+</div>
+{% endif %}
+
+<form method="POST" class="card" style="max-width:520px;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  <label class="field-label">Кімге жіберу?</label>
+  <select name="role" style="margin-bottom:16px;">
+    <option value="">Барлығына (жолаушы + жүргізуші)</option>
+    <option value="client">Тек жолаушыларға</option>
+    <option value="driver">Тек жүргізушілерге</option>
+  </select>
+  <label class="field-label">Хабарлама мәтіні</label>
+  <textarea name="text" rows="5" required></textarea>
+  <button type="submit" class="btn btn-primary" style="margin-top:14px; padding:10px 20px; font-size:14px;">Жіберу</button>
+</form>
+{% endblock %}

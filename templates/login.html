@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Кіру — Жанақала Такси Admin</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Inter", -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(circle at 20% 20%, #1e1b4b, #0b0c1f 65%);
+    height: 100vh; display: flex; align-items: center; justify-content: center; margin: 0;
+  }
+  .box { background: white; padding: 40px; border-radius: 20px; width: 300px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.35); }
+  .box .logo-dot { width: 44px; height: 44px; border-radius: 12px; margin: 0 auto 14px; display: flex; align-items: center; justify-content: center; font-size: 22px; background: linear-gradient(135deg, #4f46e5, #7c3aed); }
+  h2 { margin-top: 0; color: #14161f; font-size: 17px; font-weight: 800; }
+  input { width: 100%; padding: 11px 12px; margin: 14px 0; border: 1px solid #eceef2; border-radius: 9px; font-size: 14px; }
+  input:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.12); }
+  button { width: 100%; padding: 11px; background: linear-gradient(135deg, #4f46e5, #7c3aed); color: white; border: none; border-radius: 9px; cursor: pointer; font-size: 14px; font-weight: 700; }
+  button:hover { opacity: 0.9; }
+  p { color: #b91c1c; font-size: 13px; }
+</style>
+</head>
+<body>
+  <div class="box">
+    <div class="logo-dot">🚕</div>
+    <h2>Жанақала Такси</h2>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}{% for m in messages %}<p>{{ m }}</p>{% endfor %}{% endif %}
+    {% endwith %}
+    <form method="POST"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input type="password" name="password" placeholder="Құпия сөз" required>
+      <button type="submit">Кіру</button>
+    </form>
+  </div>
+</body>
+</html>

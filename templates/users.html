@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>👥 Пайдаланушылар</h1>
+<form method="GET" style="display:flex; gap:8px; margin-bottom:16px; max-width:420px;">
+  <input type="text" name="q" placeholder="Аты, username немесе телефон бойынша іздеу" value="{{ q or '' }}">
+  <button class="btn btn-primary" type="submit" style="white-space:nowrap;">Іздеу</button>
+</form>
+<p style="margin:-8px 0 16px;"><a class="btn btn-ghost" style="text-decoration:none; display:inline-block;" href="{{ url_for('export_users', q=q) }}">⬇️ CSV экспорт</a></p>
+<table>
+  <tr><th>ID</th><th>Аты</th><th>Username</th><th>Телефон</th><th>Рөлі</th><th>Онлайн</th><th>Рейтинг</th><th>🛣 Орал рұқсаты</th><th>Тіркелген күні</th><th>Әрекет</th></tr>
+  {% for u in users %}
+  <tr{% if u.is_blocked %} style="opacity:0.5"{% endif %}>
+    <td>{{ u.id }}</td>
+    <td>{{ u.full_name or '-' }}{% if u.is_blocked %} 🚫{% endif %}</td>
+    <td>{{ '@' + u.username if u.username else '-' }}</td>
+    <td>{{ u.phone or '-' }}</td>
+    <td>{{ '🚕 жүргізуші' if u.role == 'driver' else ('🧍 жолаушы' if u.role == 'client' else '-') }}</td>
+    <td>{{ '🟢' if u.role == 'driver' and u.is_online else ('🔴' if u.role == 'driver' else '-') }}</td>
+    <td>{{ u.rating_display if u.role == 'driver' else '-' }}</td>
+    <td>{{ '✅ бар' if u.intercity_access else '—' }}</td>
+    <td>{{ u.created_at[:16] if u.created_at else '-' }}</td>
+    <td>
+      {% if u.is_blocked %}
+      <form class="inline" method="POST" action="{{ url_for('unblock_user', user_id=u.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-complete" type="submit">Ашу</button>
+      </form>
+      {% else %}
+      <form class="inline" method="POST" action="{{ url_for('block_user', user_id=u.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-cancel" type="submit">Бұғаттау</button>
+      </form>
+      {% endif %}
+      {% if u.intercity_access %}
+      <form class="inline" method="POST" action="{{ url_for('revoke_intercity', user_id=u.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-ghost" type="submit">Орал рұқсатын алу</button>
+      </form>
+      {% else %}
+      <form class="inline" method="POST" action="{{ url_for('grant_intercity', user_id=u.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-primary" type="submit">Орал рұқсат беру</button>
+      </form>
+      {% endif %}
+      <a class="btn btn-ghost" style="text-decoration:none; display:inline-block;" href="{{ url_for('support', user_id=u.id) }}">✉️ Хабарлама</a>
+      <form class="inline" method="POST" action="{{ url_for('delete_user', user_id=u.id) }}"
+            onsubmit="return confirm('{{ (u.full_name or u.username or u.id) }} толығымен жойылсын ба? Бұл әрекетті қайтару мүмкін емес.');"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-cancel" type="submit">🗑 Жою</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}

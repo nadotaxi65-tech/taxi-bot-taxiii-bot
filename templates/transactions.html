@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>💳 Баланс / Транзакциялар</h1>
+<p class="hint" style="margin:-8px 0 16px;">Жүргізушінің "💳 Баланс толтыру" немесе "💸 Ақша шығару" сұраулары осы жерде күтеді. Растасаңыз — баланс бірден өзгереді және жүргізушіге Telegram-да хабарланады.</p>
+
+{% if not pending %}
+<div class="card">Күтудегі транзакция жоқ.</div>
+{% else %}
+<table>
+  <tr><th>Жүргізуші</th><th>Телефон</th><th>Түрі</th><th>Сома</th><th>Ескертпе</th><th>Уақыты</th><th>Әрекет</th></tr>
+  {% for t in pending %}
+  <tr>
+    <td>{{ t.full_name or ('@' + t.username if t.username else t.telegram_id) }}</td>
+    <td>{{ t.phone or '-' }}</td>
+    <td>{{ '➕ Толтыру' if t.type == 'topup' else '💸 Шығару' }}</td>
+    <td>{{ '%+.0f'|format(t.amount) }} ₸</td>
+    <td>{{ t.note or '-' }}</td>
+    <td>{{ t.created_at[:16] if t.created_at else '-' }}</td>
+    <td>
+      <form class="inline" method="POST" action="{{ url_for('approve_tx', tx_id=t.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-complete" type="submit">✅ Растау</button>
+      </form>
+      <form class="inline" method="POST" action="{{ url_for('reject_tx', tx_id=t.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-cancel" type="submit">❌ Бас тарту</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+{% endblock %}

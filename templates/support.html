@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>🆘 Қолдау хабарламалары</h1>
+
+{% if not selected %}
+  {% if not threads %}
+  <div class="card">Әзірге қолдау сұраулары жоқ.</div>
+  {% else %}
+  <table>
+    <tr><th>Пайдаланушы</th><th>Рөлі</th><th>Телефон</th><th>Соңғы хабар</th><th>Оқылмаған</th><th></th></tr>
+    {% for t in threads %}
+    <tr{% if t.unread %} style="font-weight:600;"{% endif %}>
+      <td>{{ t.full_name or ('@' + t.username if t.username else t.telegram_id) }}</td>
+      <td>{{ '🚕 жүргізуші' if t.role == 'driver' else ('🧍 жолаушы' if t.role == 'client' else '-') }}</td>
+      <td>{{ t.phone or '-' }}</td>
+      <td>{{ t.last_at[:16] if t.last_at else '-' }}</td>
+      <td>{{ t.unread if t.unread else '-' }}</td>
+      <td><a class="btn btn-primary" style="text-decoration:none; display:inline-block;" href="{{ url_for('support', user_id=t.user_id) }}">Ашу</a></td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% endif %}
+{% else %}
+  <p><a href="{{ url_for('support') }}">&larr; Барлық хабарламалар</a></p>
+  <div class="card" style="margin-bottom:18px;">
+    <strong>{{ selected.full_name or ('@' + selected.username if selected.username else selected.telegram_id) }}</strong>
+    &nbsp;·&nbsp; {{ selected.phone or '-' }}
+    &nbsp;·&nbsp; {{ '🚕 жүргізуші' if selected.role == 'driver' else '🧍 жолаушы' }}
+  </div>
+  <div class="card" style="margin-bottom:18px; max-height:420px; overflow-y:auto;">
+    {% for m in messages %}
+    <div style="margin-bottom:12px; text-align:{{ 'right' if m.direction == 'out' else 'left' }};">
+      <span style="display:inline-block; max-width:75%; padding:9px 13px; border-radius:10px;
+        background:{{ '#eef2ff' if m.direction == 'out' else '#f5f6fa' }};">
+        {{ m.text }}
+      </span>
+      <div class="hint" style="margin:2px 0 0;">{{ m.created_at[:16] }}{{ ' · Әкімші' if m.direction == 'out' else '' }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  <form method="POST" style="display:flex; gap:8px;"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="text" name="text" placeholder="Жауап жазыңыз..." required>
+    <button class="btn btn-primary" type="submit" style="white-space:nowrap;">Жіберу</button>
+  </form>
+{% endif %}
+{% endblock %}

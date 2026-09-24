@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>🚕 Барлық тапсырыстар</h1>
+<div class="filters">
+  <a href="{{ url_for('rides') }}" class="{{ 'active' if not status_filter }}">Барлығы</a>
+  <a href="{{ url_for('rides', status='open') }}" class="{{ 'active' if status_filter=='open' }}">Ашық</a>
+  <a href="{{ url_for('rides', status='accepted') }}" class="{{ 'active' if status_filter=='accepted' }}">Жолда</a>
+  <a href="{{ url_for('rides', status='arrived') }}" class="{{ 'active' if status_filter=='arrived' }}">Жетті</a>
+  <a href="{{ url_for('rides', status='completed') }}" class="{{ 'active' if status_filter=='completed' }}">Аяқталған</a>
+  <a href="{{ url_for('rides', status='cancelled') }}" class="{{ 'active' if status_filter=='cancelled' }}">Болдырылмаған</a>
+</div>
+<p style="margin:-8px 0 16px;"><a class="btn btn-ghost" style="text-decoration:none; display:inline-block;" href="{{ url_for('export_rides', status=status_filter) }}">⬇️ CSV экспорт</a></p>
+<table>
+  <tr><th>№</th><th>Түрі</th><th>Клиент</th><th>Қайдан</th><th>Қайда</th><th>Уақыт</th><th>Баға</th><th>Жүргізуші</th><th>Статус</th><th>Рейтинг</th><th>Әрекет</th></tr>
+  {% for r in rides %}
+  <tr>
+    <td>{{ r.id }}</td>
+    <td>
+      <span class="badge badge-{{ r.service_type or 'taxi' }}">{{ '📦 Жеткізу' if r.service_type == 'delivery' else '🚕 Такси' }}</span>
+      {% if r.route == 'intercity' %}<br><span class="badge badge-intercity">🛣 Орал</span>{% endif %}
+      {% if r.item_note %}<div class="hint" style="margin:4px 0 0;">{{ r.item_note }}</div>{% endif %}
+    </td>
+    <td>{{ r.client_name or '-' }}</td>
+    <td>{{ r.from_location }}{% if r.from_lat %} <a href="https://maps.google.com/?q={{ r.from_lat }},{{ r.from_lon }}" target="_blank">🗺</a>{% endif %}</td>
+    <td>{{ r.to_location }}{% if r.to_lat %} <a href="https://maps.google.com/?q={{ r.to_lat }},{{ r.to_lon }}" target="_blank">🗺</a>{% endif %}</td>
+    <td>{{ r.ride_time }}</td>
+    <td>{{ r.price }} тг</td>
+    <td>{{ r.driver_name or '-' }}</td>
+    <td><span class="badge badge-{{ r.status }}">{{ r.status }}</span></td>
+    <td>{{ '⭐' * r.rating if r.rating else '-' }}</td>
+    <td>
+      {% if r.status in ['open', 'accepted', 'arrived'] %}
+      <form class="inline" method="POST" action="{{ url_for('complete_ride', ride_id=r.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-complete" type="submit">Аяқтау</button>
+      </form>
+      <form class="inline" method="POST" action="{{ url_for('cancel_ride', ride_id=r.id) }}"><input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn btn-cancel" type="submit">Болдырмау</button>
+      </form>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+{% endblock %}
